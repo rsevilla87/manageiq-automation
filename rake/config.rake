@@ -63,7 +63,7 @@ namespace :config do
     begin
       raise "You must specify zone name and zone description" if ENV['NAME'].blank? or ENV['DESCRIPTION'].blank?
       zone = Zone.new({'name' => ENV['NAME'], 'description' => ENV['DESCRIPTION']})
-      zone.save 
+      zone.save
     rescue => err
       STDERR.puts err.message
       exit(1)
@@ -73,7 +73,7 @@ namespace :config do
   desc "Modify appliance zone"
   task :modify_zone => [:environment] do
     begin
-      raise "You must specify a existent zone name and appliance name" if ENV['APPLIANCE_ID'].blank? or ENV['ZONE'].blank?
+      raise "You must specify a existent zone name and appliance name" if ENV['APPLIANCE_ID'].blank? or ENV['ZONE_NAME'].blank?
       appliance = MiqServer.find(ENV['APPLIANCE_ID'])
       zone = Zone.find_by_name(ENV['ZONE_NAME'])
       if zone.nil? or appliance.nil?
@@ -81,6 +81,10 @@ namespace :config do
       end
       appliance.zone = zone
       appliance.save
+      config = VMDB::Config.new("vmdb")
+      config.config[:server][:zone] = ENV['ZONE_NAME']
+      config.validate
+      config.save
     rescue => err
       STDERR.puts err.message
       exit(1)
@@ -95,7 +99,7 @@ namespace :config do
     end
     puts arr.to_json
   end
-    
+
   desc "List available zones"
   task :list_zones=> [:environment] do
     arr = []
@@ -106,4 +110,3 @@ namespace :config do
   end
 
 end
-
